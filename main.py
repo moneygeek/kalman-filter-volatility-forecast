@@ -6,15 +6,18 @@ import torch
 import yfinance as yf
 from matplotlib import pyplot as plt
 import pandas as pd
+from sklearn.metrics import r2_score
 
-from model.trainer import evaluate_model, train_model, predict
+from model.trainer import train_model, predict
 
 # Get the closing price of the S&P 500 Index ETF
 # spy = yf.Ticker("SPY")
 # price_series = spy.history(period='max')['Close']
 #
 # # Calculate the 5-day rolling volatility
-# volatility_series = price_series.pct_change().rolling(5).std().dropna()
+# volatility_series = price_series.pct_change().rolling('7D').std().dropna()
+# weekly_index = pd.date_range(volatility_series.index[0], volatility_series.index[-1], freq='W-FRI')
+# volatility_series = volatility_series.reindex(weekly_index, method='ffill')
 # volatility_series.to_pickle('volatility_series.pkl')
 
 volatility_series = pd.read_pickle('volatility_series.pkl')
@@ -38,8 +41,15 @@ else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
 training_series = volatility_series.loc[volatility_series.index < training_cutoff]
-results = train_model(training_series, epochs=1)
+trained_model = train_model(training_series, epochs=1)
 
-predict_df = predict(results, volatility_series)
+predict_series = predict(trained_model, volatility_series)
 
-print(spy.info)
+results_df = volatility_series.to_frame('Actual').join(predict_series.shift(1).to_frame('Forecast'))
+results_df = results_df.loc[results_df.index >= training_cutoff]
+
+results_df.plot.line()
+results_df.plot.scatter(x='Actual', y='Forecast')
+plt.show()
+
+print(f"R Squared: {r2_score(results_df['Actual'], results_df['Forecast']):.4f}")
