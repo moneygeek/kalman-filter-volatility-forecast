@@ -6,7 +6,7 @@ import pandas as pd
 import pyro
 import torch
 from pyro import optim
-from pyro.infer import SVI, Predictive, TraceGraph_ELBO
+from pyro.infer import SVI, Predictive, TraceMeanField_ELBO
 from pyro.infer.autoguide import AutoDelta
 
 from model.hmm_module import VolatilityForecastModule
@@ -46,7 +46,7 @@ def train_model(training_series: pd.Series, epochs: int = 1000) -> TrainedModel:
     optimizer = optim.Adam({
         'lr': 1e-3
     })
-    svi = SVI(net, guide, optimizer, loss=TraceGraph_ELBO())
+    svi = SVI(net, guide, optimizer, loss=TraceMeanField_ELBO())
 
     for i in range(epochs):
         elbo = svi.step(in_sample_data)
@@ -87,7 +87,7 @@ def predict(trained_model: TrainedModel, volatility_series: pd.Series) \
 
     volatility_pred_series = pd.Series(
         vol_preds.T.detach().cpu().numpy(),
-        index=volatility_series.index
+        index=volatility_series.index[1:]
     )
 
     return volatility_pred_series

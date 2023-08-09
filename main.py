@@ -41,15 +41,31 @@ else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
 training_series = volatility_series.loc[volatility_series.index < training_cutoff]
-trained_model = train_model(training_series, epochs=1)
+trained_model = train_model(training_series, epochs=1000)
 
 predict_series = predict(trained_model, volatility_series)
 
-results_df = volatility_series.to_frame('Actual').join(predict_series.shift(1).to_frame('Forecast'))
-results_df = results_df.loc[results_df.index >= training_cutoff]
+naive_results_df = volatility_series.to_frame('Actual').join(volatility_series.shift(1).to_frame('Forecast'))
+naive_results_df = naive_results_df.loc[naive_results_df.index >= training_cutoff]
 
+naive_results_df.plot.line()
+naive_results_df.plot.scatter(x='Actual', y='Forecast')
+plt.show()
+
+print(f"Naive R Squared: {r2_score(naive_results_df['Actual'], naive_results_df['Forecast']):.4f}")
+
+log_results_df = volatility_series.to_frame('Actual').join(predict_series.shift(1).to_frame('Forecast'))
+log_results_df = log_results_df.loc[log_results_df.index >= training_cutoff]
+
+log_results_df.plot.line()
+log_results_df.plot.scatter(x='Actual', y='Forecast')
+plt.show()
+
+print(f"Log Space R Squared: {r2_score(log_results_df['Actual'], log_results_df['Forecast']):.4f}")
+
+results_df = pd.DataFrame(np.exp(log_results_df.values), index=log_results_df.index, columns=log_results_df.columns)
 results_df.plot.line()
 results_df.plot.scatter(x='Actual', y='Forecast')
 plt.show()
 
-print(f"R Squared: {r2_score(results_df['Actual'], results_df['Forecast']):.4f}")
+print(f"Original Space R Squared: {r2_score(results_df['Actual'], results_df['Forecast']):.4f}")
