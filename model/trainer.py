@@ -24,7 +24,7 @@ def _format_tensor(val):
     return f"[{', '.join([_format_tensor(e) for e in val])}]"
 
 
-def train_model(training_series: pd.Series, epochs: int = 1000) -> TrainedModel:
+def train_model(training_series: pd.Series, epochs: int) -> TrainedModel:
     """
     Trains a single volatility forecasting model.
     :param volatility_df: Dataframe containing raw volatility data. Index consists of dates and values consist of
@@ -32,6 +32,11 @@ def train_model(training_series: pd.Series, epochs: int = 1000) -> TrainedModel:
     :param epochs: Number of epochs to train.
     :return: Object containing trained model.
     """
+    if torch.cuda.is_available():
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')  # Store all training data in the GPU
+    else:
+        torch.set_default_tensor_type('torch.FloatTensor')
+
     pyro.clear_param_store()  # Pyro stores trained parameters as global variables. Clear previously trained parameters.
 
     in_sample_data = torch.tensor(training_series.values, dtype=torch.float32).unsqueeze(0)

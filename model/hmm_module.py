@@ -18,17 +18,17 @@ class VolatilityForecastModule(PyroModule):
         # Set first observed volatility as the forecast for second volatility
         vol_loc = x[0, 0].unsqueeze(-1).unsqueeze(-1)
 
-        init_dist_scale = pyro.sample("init_dist_scale", dist.LogNormal(-2., 5.))
+        init_dist_scale = pyro.sample("init_dist_scale", dist.LogNormal(-2., 3.))
         vol_scale = torch.tensor([[init_dist_scale]]).expand([1, 1, 1])
 
         transition_matrix = torch.tensor([[1.]])
 
-        transition_scale = pyro.sample("trans_scale", dist.LogNormal(-2., 5.))
+        transition_scale = pyro.sample("trans_scale", dist.LogNormal(-2., 3.))
         transition_dist = dist.Normal(0., transition_scale.unsqueeze(-1)).to_event(1)
 
         observation_matrix = torch.tensor([[1.]])
 
-        observation_scale = pyro.sample("obs_scale", dist.LogNormal(-2., 5.))
+        observation_scale = pyro.sample("obs_scale", dist.LogNormal(-2., 3.))
         observation_dist = dist.Normal(0., observation_scale.unsqueeze(-1)).to_event(1)
 
         forecasts = []
