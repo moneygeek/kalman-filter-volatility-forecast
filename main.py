@@ -18,9 +18,6 @@ if __name__ == "__main__":
     volatility_series = price_series.pct_change().rolling('7D').std().dropna()
     weekly_index = pd.date_range(volatility_series.index[0], volatility_series.index[-1], freq='W-FRI')
     volatility_series = volatility_series.reindex(weekly_index, method='ffill')
-    # volatility_series.to_pickle('volatility_series.pkl')
-
-    # volatility_series = pd.read_pickle('volatility_series.pkl')
 
     # Show that volatility's distribution is heavily skewed to the right
     volatility_series.plot.hist(bins=30)
@@ -39,6 +36,7 @@ if __name__ == "__main__":
 
     predict_series = predict(trained_model, volatility_series)
 
+    # Show the performance of naive method that use previous week's volatility as the forecast
     naive_results_df = volatility_series.to_frame('Actual').join(volatility_series.shift(1).to_frame('Forecast'))
     naive_results_df = naive_results_df.loc[naive_results_df.index >= training_cutoff]
 
@@ -49,6 +47,7 @@ if __name__ == "__main__":
     print(f"[Naive] R Squared: {r2_score(naive_results_df['Actual'], naive_results_df['Forecast']):.4f}, "
           f"Mean Absolute Error: {mean_absolute_error(naive_results_df['Actual'], naive_results_df['Forecast']):.4f}")
 
+    # Show performance of the model in log space
     log_results_df = volatility_series.to_frame('Actual').join(predict_series.shift(1).to_frame('Forecast'))
     log_results_df = log_results_df.loc[log_results_df.index >= training_cutoff]
 
@@ -59,6 +58,7 @@ if __name__ == "__main__":
     print(f"[Log Space] R Squared: {r2_score(log_results_df['Actual'], log_results_df['Forecast']):.4f}, "
           f"Mean Absolute Error: {mean_absolute_error(log_results_df['Actual'], log_results_df['Forecast']):.4f}")
 
+    # Show the performance of the model in original space
     results_df = pd.DataFrame(np.exp(log_results_df.values), index=log_results_df.index, columns=log_results_df.columns)
     results_df.plot.line()
     results_df.plot.scatter(x='Actual', y='Forecast')

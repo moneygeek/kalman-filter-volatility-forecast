@@ -32,6 +32,8 @@ def train_model(training_series: pd.Series, epochs: int) -> TrainedModel:
     :param epochs: Number of epochs to train.
     :return: Object containing trained model.
     """
+
+    # Put data into GPU if possible
     if torch.cuda.is_available():
         torch.set_default_tensor_type('torch.cuda.FloatTensor')  # Store all training data in the GPU
     else:
@@ -56,7 +58,7 @@ def train_model(training_series: pd.Series, epochs: int) -> TrainedModel:
     for i in range(epochs):
         elbo = svi.step(in_sample_data)
 
-        #  Print variable values
+        # Print goodness of fit (ELBO) and variable values
         params = ', '.join([f"{key} = {_format_tensor(val)}" for key, val in pyro.get_param_store().items()])
         print(f"[Epoch {i}] ELBO: {elbo}, Params: {params}")
 
@@ -80,6 +82,7 @@ def predict(trained_model: TrainedModel, volatility_series: pd.Series) \
     trained_model.model.eval()
     trained_model.guide.eval()
 
+    # Run model and extract forecasts
     x = torch.tensor(volatility_series.values, dtype=torch.float32).unsqueeze(0)
     predictive = Predictive(
         model=trained_model.model.cpu(),
@@ -92,7 +95,7 @@ def predict(trained_model: TrainedModel, volatility_series: pd.Series) \
 
     volatility_pred_series = pd.Series(
         vol_preds.T.detach().cpu().numpy(),
-        index=volatility_series.index[1:]
+        index=volatility_series.index[1:]  # Recall that we don't generate forecasts as of the first data point
     )
 
     return volatility_pred_series
