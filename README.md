@@ -1,7 +1,7 @@
 # kalman-filter-volatility-forecast
 Sample code that shows how to forecast stock market volatility using a Kalman filter.
 
-Created by Jin Choi, PhD `https://www.eddywealth.com/about/jin-choi/ <https://www.eddywealth.com/about/jin-choi/>`
+Created by Jin Choi, PhD [https://www.eddywealth.com/about/jin-choi/](https://www.eddywealth.com/about/jin-choi/)
 
 Installation
 ------------
@@ -10,7 +10,7 @@ Install dependencies using ``pip``::
    
     pip install -r requirements.txt
 
-If you have CUDA installed, you may want to install `pytorch <https://pytorch.org/>` separately. Doing so will
+If you have CUDA installed, you may want to install [pytorch](https://pytorch.org/) separately. Doing so will
 significantly speed up model training.
 
 Running
